@@ -274,3 +274,24 @@ curl -i http://127.0.0.1:8000/health
 curl -i http://127.0.0.1:8000/ready
 curl -i http://127.0.0.1:8000/api/v1/events
 ```
+
+## CI and Security
+
+GitHub Actions CI validates formatting, linting, type checking, Alembic migrations, the PostgreSQL-backed test suite, and a production Docker image build. The CI test command enforces the current minimum coverage gate of 70%.
+
+The security workflow runs Gitleaks against committed Git history and runs Trivy filesystem and image scans. Trivy blocks HIGH and CRITICAL findings while ignoring unfixed vulnerabilities for the initial policy. The image is built for validation but is not pushed to any registry.
+
+All external GitHub Actions are pinned to immutable full commit SHAs. The Trivy action uses a fixed Trivy CLI version and disables the action cache path.
+
+Equivalent local checks:
+
+```bash
+.venv/bin/ruff format --check .
+.venv/bin/ruff check .
+.venv/bin/mypy app
+.venv/bin/pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=70
+docker build --pull --tag eventpulse-api:ci-test .
+docker image inspect eventpulse-api:ci-test
+```
+
+The workflows still need to run on GitHub before their remote execution can be considered verified.
