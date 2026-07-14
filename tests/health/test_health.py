@@ -1,13 +1,8 @@
 from fastapi.testclient import TestClient
 
-from app.main import app
 
-
-def test_health_returns_stable_response() -> None:
-    # Arrange
-    client = TestClient(app)
-
-    # Act
+def test_health_returns_stable_response(client: TestClient) -> None:
+    # Arrange, Act
     response = client.get("/health")
 
     # Assert
