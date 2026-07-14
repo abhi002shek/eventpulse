@@ -1,6 +1,6 @@
 # EventPulse
 
-EventPulse is a learning-focused event-booking application. Milestone 2A adds the local PostgreSQL database foundation and readiness endpoint.
+EventPulse is a learning-focused event-booking application. Milestone 2B adds the Event database model, repeatable event seeding, and read-only Event APIs.
 
 ## Current Scope
 
@@ -9,16 +9,20 @@ This milestone includes:
 - FastAPI application entry point
 - `GET /health`
 - `GET /ready`
+- `GET /api/v1/events`
+- `GET /api/v1/events/{event_id}`
 - environment-based settings
 - standard-library JSON logging
 - a central location for future exception handlers
 - PostgreSQL 16-alpine for local development
 - SQLAlchemy synchronous engine and session factory
 - Alembic migration framework
+- Event SQLAlchemy model and read-only API routes
+- Repeatable demonstration event seed command
 - Ruff, Mypy, and Pytest configuration
-- Pytest coverage for health and readiness
+- Pytest coverage for health, readiness, and event reads
 
-This milestone does not include event APIs, booking APIs, authentication, payments, cloud infrastructure, Kubernetes, Terraform, or frontend code.
+This milestone does not include booking APIs, ticket reservation logic, authentication, payments, cloud infrastructure, Kubernetes, Terraform, or frontend code.
 
 ## Requirements
 
@@ -96,6 +100,23 @@ Run migrations:
 .venv/bin/alembic upgrade head
 ```
 
+To test the latest downgrade and upgrade locally:
+
+```bash
+.venv/bin/alembic downgrade -1
+.venv/bin/alembic upgrade head
+```
+
+## Seed Demonstration Events
+
+Seed five repeatable demonstration events:
+
+```bash
+.venv/bin/python -m app.scripts.seed_events
+```
+
+The command is safe to run more than once. It uses fixed public UUID values and reports how many events were inserted and how many already existed.
+
 ## Run Locally
 
 ```bash
@@ -134,6 +155,18 @@ Expected response when PostgreSQL is reachable:
 }
 ```
 
+List events:
+
+```bash
+curl http://127.0.0.1:8000/api/v1/events
+```
+
+Get one event by public UUID:
+
+```bash
+curl http://127.0.0.1:8000/api/v1/events/<PUBLIC_UUID>
+```
+
 ## Validate
 
 Run all checks from the repository root:
@@ -142,7 +175,9 @@ Run all checks from the repository root:
 .venv/bin/ruff format --check .
 .venv/bin/ruff check .
 .venv/bin/mypy app
-.venv/bin/alembic current
 .venv/bin/alembic upgrade head
+.venv/bin/alembic current
+.venv/bin/python -m app.scripts.seed_events
+.venv/bin/python -m app.scripts.seed_events
 .venv/bin/pytest --cov=app --cov-report=term-missing --cov-report=xml
 ```

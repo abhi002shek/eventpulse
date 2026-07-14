@@ -5,8 +5,10 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.configuration.settings import get_settings
 from app.database.base import Base
+from app.events.models import Event
 
 config = context.config
+_ = Event
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
