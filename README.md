@@ -1,6 +1,6 @@
 # EventPulse
 
-EventPulse is a learning-focused event-booking application. Milestone 2C adds booking creation, booking retrieval, and transactional event capacity protection.
+EventPulse is a learning-focused event-booking application. Milestone 3A adds a production-style Docker image and complete local Docker Compose stack for the API and PostgreSQL.
 
 ## Current Scope
 
@@ -23,6 +23,8 @@ This milestone includes:
 - Repeatable demonstration event seed command
 - Booking SQLAlchemy model and API routes
 - PostgreSQL row-level locking for booking capacity protection
+- Production-style API Docker image
+- Local Docker Compose stack with API and PostgreSQL
 - Ruff, Mypy, and Pytest configuration
 - Pytest coverage for health, readiness, event reads, and bookings
 
@@ -31,6 +33,8 @@ This milestone does not include cancellation, refunds, payments, authentication,
 ## Requirements
 
 - Python 3.12
+- Docker
+- Docker Compose
 
 ## Local Setup
 
@@ -81,6 +85,54 @@ docker compose down
 ```
 
 Reset local database data only when you intentionally want to delete it:
+
+```bash
+docker compose down -v
+```
+
+Warning: `docker compose down -v` deletes the local PostgreSQL volume and all local database data.
+
+## Run With Docker Compose
+
+The local Compose stack uses PostgreSQL and the EventPulse API container. PostgreSQL is bound to `127.0.0.1:5432`, and the API is bound to `127.0.0.1:8000`.
+
+Start PostgreSQL first:
+
+```bash
+docker compose up -d postgres
+```
+
+Run migrations explicitly:
+
+```bash
+docker compose run --rm api alembic upgrade head
+```
+
+Start the API:
+
+```bash
+docker compose up -d api
+```
+
+Check service health:
+
+```bash
+docker compose ps
+```
+
+Seed demonstration events when needed:
+
+```bash
+docker compose run --rm api python -m app.scripts.seed_events
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+Reset local database data only when intentional:
 
 ```bash
 docker compose down -v
@@ -203,4 +255,22 @@ Run all checks from the repository root:
 .venv/bin/alembic downgrade -1
 .venv/bin/alembic upgrade head
 .venv/bin/pytest --cov=app --cov-report=term-missing --cov-report=xml
+```
+
+Validate the container stack:
+
+```bash
+docker compose config
+docker compose build --no-cache api
+docker image inspect eventpulse-api:local
+docker compose down
+docker compose up -d postgres
+docker compose run --rm api alembic upgrade head
+docker compose up -d api
+docker compose ps
+docker compose run --rm api python -m app.scripts.seed_events
+docker compose run --rm api python -m app.scripts.seed_events
+curl -i http://127.0.0.1:8000/health
+curl -i http://127.0.0.1:8000/ready
+curl -i http://127.0.0.1:8000/api/v1/events
 ```

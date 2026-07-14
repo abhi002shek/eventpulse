@@ -2,18 +2,56 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: eventpulse
-      POSTGRES_USER: eventpulse
-      POSTGRES_PASSWORD: eventpulse_dev_password
+      POSTGRES_DB: ${DATABASE_NAME:-eventpulse}
+      POSTGRES_USER: ${DATABASE_USER:-eventpulse}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-eventpulse_dev_password}
     ports:
       - "127.0.0.1:5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eventpulse -d eventpulse"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 12
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
+  api:
+    image: eventpulse-api:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      EVENTPULSE_APP_NAME: ${EVENTPULSE_APP_NAME:-EventPulse API}
+      EVENTPULSE_SERVICE_NAME: ${EVENTPULSE_SERVICE_NAME:-eventpulse-api}
+      EVENTPULSE_ENVIRONMENT: ${EVENTPULSE_ENVIRONMENT:-local}
+      EVENTPULSE_LOG_LEVEL: ${EVENTPULSE_LOG_LEVEL:-INFO}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_NAME: ${DATABASE_NAME:-eventpulse}
+      DATABASE_USER: ${DATABASE_USER:-eventpulse}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-eventpulse_dev_password}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/ready', timeout=3).read()",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
 
 volumes:
   postgres-data:

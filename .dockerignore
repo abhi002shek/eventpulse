@@ -8,3 +8,8 @@ __pycache__/
 coverage.xml
 .env
 .git/
+tests/
+docs/
+README.md
+AGENTS.md
+requirements-dev.txt
