@@ -4,10 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.events.models import Event
 from app.events.repository import EventRepository
-
-
-class EventNotFoundError(Exception):
-    """Raised when a public event identifier does not match an event."""
+from app.exceptions import EventNotFoundError
 
 
 class EventService:

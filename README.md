@@ -1,6 +1,6 @@
 # EventPulse
 
-EventPulse is a learning-focused event-booking application. Milestone 2B adds the Event database model, repeatable event seeding, and read-only Event APIs.
+EventPulse is a learning-focused event-booking application. Milestone 2C adds booking creation, booking retrieval, and transactional event capacity protection.
 
 ## Current Scope
 
@@ -11,6 +11,8 @@ This milestone includes:
 - `GET /ready`
 - `GET /api/v1/events`
 - `GET /api/v1/events/{event_id}`
+- `POST /api/v1/bookings`
+- `GET /api/v1/bookings/{booking_id}`
 - environment-based settings
 - standard-library JSON logging
 - a central location for future exception handlers
@@ -19,10 +21,12 @@ This milestone includes:
 - Alembic migration framework
 - Event SQLAlchemy model and read-only API routes
 - Repeatable demonstration event seed command
+- Booking SQLAlchemy model and API routes
+- PostgreSQL row-level locking for booking capacity protection
 - Ruff, Mypy, and Pytest configuration
-- Pytest coverage for health, readiness, and event reads
+- Pytest coverage for health, readiness, event reads, and bookings
 
-This milestone does not include booking APIs, ticket reservation logic, authentication, payments, cloud infrastructure, Kubernetes, Terraform, or frontend code.
+This milestone does not include cancellation, refunds, payments, authentication, user accounts, cloud infrastructure, Kubernetes, Terraform, or frontend code.
 
 ## Requirements
 
@@ -86,7 +90,7 @@ Warning: `docker compose down -v` deletes the local PostgreSQL volume and all lo
 
 ## Alembic
 
-Alembic reads database settings from the application configuration. There are no application tables yet in Milestone 2A.
+Alembic reads database settings from the application configuration.
 
 Check the current migration version:
 
@@ -167,6 +171,25 @@ Get one event by public UUID:
 curl http://127.0.0.1:8000/api/v1/events/<PUBLIC_UUID>
 ```
 
+Create a booking:
+
+```bash
+curl -i -X POST http://127.0.0.1:8000/api/v1/bookings \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_id": "11111111-1111-4111-8111-111111111111",
+    "customer_name": "Demo User",
+    "customer_email": "demo@example.com",
+    "quantity": 2
+  }'
+```
+
+Get one booking by public UUID:
+
+```bash
+curl http://127.0.0.1:8000/api/v1/bookings/<BOOKING_UUID>
+```
+
 ## Validate
 
 Run all checks from the repository root:
@@ -177,7 +200,7 @@ Run all checks from the repository root:
 .venv/bin/mypy app
 .venv/bin/alembic upgrade head
 .venv/bin/alembic current
-.venv/bin/python -m app.scripts.seed_events
-.venv/bin/python -m app.scripts.seed_events
+.venv/bin/alembic downgrade -1
+.venv/bin/alembic upgrade head
 .venv/bin/pytest --cov=app --cov-report=term-missing --cov-report=xml
 ```

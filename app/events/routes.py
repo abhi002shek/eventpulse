@@ -1,12 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db_session
 from app.events.schemas import EventResponse
-from app.events.service import EventNotFoundError, EventService
+from app.events.service import EventService
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -24,12 +24,5 @@ def get_event(
     event_id: UUID,
     session: Annotated[Session, Depends(get_db_session)],
 ) -> EventResponse:
-    try:
-        event = EventService(session).get_event(event_id)
-    except EventNotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Event not found",
-        ) from exc
-
+    event = EventService(session).get_event(event_id)
     return EventResponse.model_validate(event)

@@ -5,9 +5,10 @@ from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.bookings.models import Booking
 from app.database.dependencies import get_db_session
 from app.database.session import engine
 from app.events.models import Event
@@ -30,6 +31,9 @@ def isolated_event_client() -> Generator[TestClient, None, None]:
     app.dependency_overrides[get_db_session] = override_get_db_session
 
     try:
+        event_ids = session.scalars(select(Event.id)).all()
+        if event_ids:
+            session.execute(delete(Booking).where(Booking.event_id.in_(event_ids)))
         session.execute(delete(Event))
         session.flush()
         with TestClient(app) as client:

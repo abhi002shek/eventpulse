@@ -3,12 +3,13 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from app.bookings.models import Booking
 from app.configuration.settings import get_settings
 from app.database.base import Base
 from app.events.models import Event
 
 config = context.config
-_ = Event
+_ = (Booking, Event)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
