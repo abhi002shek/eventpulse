@@ -4,7 +4,7 @@ This package prepares a temporary, self-hosted SonarQube Community Build instanc
 
 ## Recommended EC2 Instance
 
-- Ubuntu 24.04 LTS x86_64
+- Ubuntu 24.04 or 26.04 LTS x86_64
 - 2 vCPU
 - 8 GB RAM
 - 30 GB gp3 EBS

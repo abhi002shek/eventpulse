@@ -7,7 +7,7 @@ usage() {
   cat <<'USAGE'
 Usage: sudo ./setup-host.sh [--docker-user USERNAME]
 
-Prepares an Ubuntu 24.04 host for the EventPulse SonarQube Community Build stack.
+Prepares an Ubuntu 24.04 or 26.04 host for the EventPulse SonarQube Community Build stack.
 The optional --docker-user argument adds an existing dedicated operator user to
 the docker group. Docker group membership is root-equivalent host access.
 USAGE
@@ -48,11 +48,20 @@ else
   exit 1
 fi
 
-if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "24.04" ]]; then
-  echo "ERROR: this script is intended for Ubuntu 24.04." >&2
+if [[ "${ID:-}" != "ubuntu" ]]; then
+  echo "ERROR: this script is intended for Ubuntu." >&2
   echo "Detected: ${PRETTY_NAME:-unknown}" >&2
   exit 1
 fi
+
+case "${VERSION_ID:-}" in
+  24.04 | 26.04) ;;
+  *)
+    echo "ERROR: this script supports Ubuntu 24.04 or 26.04." >&2
+    echo "Detected: ${PRETTY_NAME:-unknown}" >&2
+    exit 1
+    ;;
+esac
 
 echo "Installing required packages and Docker Engine from Docker's official repository..."
 install -m 0755 -d /etc/apt/keyrings
@@ -65,11 +74,11 @@ if [[ ! -f /etc/apt/keyrings/docker.asc ]]; then
 fi
 
 ARCH="$(dpkg --print-architecture)"
-CODENAME="$(
-  # shellcheck disable=SC1091
-  . /etc/os-release
-  printf '%s' "${VERSION_CODENAME}"
-)"
+CODENAME="${VERSION_CODENAME:-${UBUNTU_CODENAME:-}}"
+if [[ -z "${CODENAME}" ]]; then
+  echo "ERROR: Ubuntu codename is missing from /etc/os-release." >&2
+  exit 1
+fi
 
 cat >/etc/apt/sources.list.d/docker.list <<EOF
 deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${CODENAME} stable
