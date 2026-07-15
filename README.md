@@ -283,6 +283,14 @@ The security workflow runs Gitleaks against committed Git history and runs Trivy
 
 All external GitHub Actions are pinned to immutable full commit SHAs. The Trivy action uses a fixed Trivy CLI version and disables the action cache path.
 
+## SonarQube
+
+SonarQube analysis runs only for trusted pushes to `main` or manual `workflow_dispatch` runs. Pull requests do not run on the EC2 self-hosted runner.
+
+The workflow uses the `eventpulse-sonar` self-hosted runner, runs the PostgreSQL-backed test suite, writes `coverage.xml`, and sends that coverage report to the SonarQube server. It waits for the SonarQube quality gate and fails when the scanner cannot reach SonarQube, analysis fails, tests fail, coverage is below 70%, or the quality gate is red.
+
+SonarQube complements the existing CI, Gitleaks, and Trivy checks. The SonarQube UI remains reachable only through an SSH tunnel to the EC2 host.
+
 Equivalent local checks:
 
 ```bash
