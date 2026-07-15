@@ -7,3 +7,15 @@ __pycache__/
 .coverage
 coverage.xml
 .env
+.env.sonar
+*.runner-registration-token
+*.runner-removal-token
+*.backup.sql
+*.backup.sql.gz
+*.backup.tar
+*.backup.tar.gz
+*.backup.tgz
+*.pem
+*.key
+id_rsa
+id_ed25519
