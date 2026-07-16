@@ -1,0 +1,17 @@
+EventPulse has been deployed into namespace {{ .Release.Namespace }}.
+
+API service:
+  {{ include "eventpulse.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+Port-forward locally:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "eventpulse.fullname" . }} 8000:{{ .Values.service.port }}
+
+Then check:
+  curl http://127.0.0.1:8000/health
+  curl http://127.0.0.1:8000/ready
+  curl http://127.0.0.1:8000/api/v1/events
+
+This chart deploys the application by immutable digest:
+  {{ include "eventpulse.image" . }}
+
+Local PostgreSQL is for Kind validation only. AWS RDS is expected to replace it in a later cloud milestone.
