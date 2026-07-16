@@ -291,6 +291,16 @@ The workflow uses the `eventpulse-sonar` self-hosted runner, runs the PostgreSQL
 
 SonarQube complements the existing CI, Gitleaks, and Trivy checks. The SonarQube UI remains reachable only through an SSH tunnel to the EC2 host.
 
+## Secure Image Publishing
+
+The secure publishing workflow publishes EventPulse images to `ghcr.io/abhi002shek/eventpulse` only for published releases or manual workflow dispatch.
+
+The workflow builds the production image once, scans that image with Trivy before pushing, and stops before publishing if the HIGH/CRITICAL image gate fails. Approved images are pushed with an immutable `sha-${GITHUB_SHA}` tag, and release/manual version tags are added only when explicitly allowed. No `latest` tag is published.
+
+After pushing, the workflow records the exact digest, generates an SPDX JSON SBOM, uploads the SBOM as a workflow artifact, creates GitHub build provenance, signs the digest with Cosign keyless signing, verifies the signature, and checks the pulled digest still runs as `10001:10001`.
+
+Use digest-based references for verification and deployment. See `docs/runbooks/image-verification.md` for pull, SBOM, provenance and Cosign verification commands.
+
 Equivalent local checks:
 
 ```bash
