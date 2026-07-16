@@ -7,9 +7,16 @@ metadata:
     app.kubernetes.io/name: eventpulse
     app.kubernetes.io/component: api
 spec:
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
   containers:
     - name: api
       image: ghcr.io/abhi002shek/eventpulse@sha256:76571b0ad6961c7ea7c72d9c3dc81b6014e22be2ceefb26a7157ea607b80e224
+      securityContext:
+        runAsNonRoot: true
+        readOnlyRootFilesystem: true
       resources:
         requests:
           cpu: 100m
