@@ -12,4 +12,7 @@ data:
   DATABASE_HOST: {{ .Values.database.host | quote }}
   DATABASE_PORT: {{ .Values.database.port | quote }}
   DATABASE_NAME: {{ .Values.database.name | quote }}
+  PGSSLMODE: {{ .Values.database.sslMode | quote }}
+  {{- if not (include "eventpulse.databaseUsernameKey" .) }}
   DATABASE_USER: {{ .Values.database.user | quote }}
+  {{- end }}

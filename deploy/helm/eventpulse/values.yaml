@@ -102,11 +102,21 @@ database:
   port: 5432
   name: eventpulse
   user: eventpulse
+  sslMode: disable
+  secretName: eventpulse-database
+  usernameKey: ""
+  passwordKey: DATABASE_PASSWORD
   secret:
     create: true
     name: eventpulse-database
+    usernameKey: ""
     passwordKey: DATABASE_PASSWORD
     password: CHANGE_ME_LOCAL_ONLY_FAKE_PASSWORD
+  externalSecret:
+    enabled: false
+    secretProviderClassName: ""
+    mountPath: /mnt/secrets-store
+  networkPolicyEgressCidrs: []
 
 postgresql:
   enabled: true

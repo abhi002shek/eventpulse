@@ -56,7 +56,20 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "eventpulse.secretName" . }}
-                  key: {{ .Values.database.secret.passwordKey }}
+                  key: {{ include "eventpulse.databasePasswordKey" . }}
+            {{- if include "eventpulse.databaseUsernameKey" . }}
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "eventpulse.secretName" . }}
+                  key: {{ include "eventpulse.databaseUsernameKey" . }}
+            {{- end }}
+          {{- if .Values.database.externalSecret.enabled }}
+          volumeMounts:
+            - name: external-database-secret
+              mountPath: {{ .Values.database.externalSecret.mountPath | quote }}
+              readOnly: true
+          {{- end }}
           startupProbe:
             httpGet:
               path: {{ .Values.probes.startup.path }}
@@ -83,3 +96,12 @@ spec:
             failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.database.externalSecret.enabled }}
+      volumes:
+        - name: external-database-secret
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ required "database.externalSecret.secretProviderClassName is required when database.externalSecret.enabled=true" .Values.database.externalSecret.secretProviderClassName | quote }}
+      {{- end }}

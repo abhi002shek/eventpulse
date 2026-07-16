@@ -1,0 +1,2 @@
+bucket = "eventpulse-dev-terraform-state-ACCOUNT_ID-ap-south-1"
+region = "ap-south-1"
