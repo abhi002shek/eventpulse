@@ -27,6 +27,14 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
+    {{- range .Values.database.networkPolicyEgressCidrs }}
+    - to:
+        - ipBlock:
+            cidr: {{ . | quote }}
+      ports:
+        - protocol: TCP
+          port: 5432
+    {{- end }}
     - to:
         - namespaceSelector:
             matchLabels:

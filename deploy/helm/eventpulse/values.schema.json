@@ -146,18 +146,65 @@
           "type": "string",
           "minLength": 1
         },
+        "sslMode": {
+          "type": "string",
+          "enum": ["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]
+        },
+        "secretName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "usernameKey": {
+          "type": "string"
+        },
+        "passwordKey": {
+          "type": "string",
+          "minLength": 1
+        },
         "secret": {
           "type": "object",
           "required": ["name", "passwordKey"],
           "properties": {
+            "create": {
+              "type": "boolean"
+            },
             "name": {
               "type": "string",
               "minLength": 1
             },
+            "usernameKey": {
+              "type": "string"
+            },
             "passwordKey": {
               "type": "string",
               "minLength": 1
+            },
+            "password": {
+              "type": "string"
             }
+          }
+        },
+        "externalSecret": {
+          "type": "object",
+          "required": ["enabled", "secretProviderClassName", "mountPath"],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "secretProviderClassName": {
+              "type": "string"
+            },
+            "mountPath": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "networkPolicyEgressCidrs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
           }
         }
       }

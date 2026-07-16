@@ -58,12 +58,20 @@ app.kubernetes.io/component: api
 {{- printf "%s@%s" .Values.image.repository .Values.image.digest -}}
 {{- end -}}
 
-{{- define "eventpulse.configChecksum" -}}
-{{- printf "%s-%s-%s-%s-%s-%s-%v" .Values.config.appName .Values.config.serviceName .Values.config.environment .Values.config.logLevel .Values.database.host .Values.database.name .Values.database.port | sha256sum -}}
+{{- define "eventpulse.secretName" -}}
+{{- default .Values.database.secret.name .Values.database.secretName -}}
 {{- end -}}
 
-{{- define "eventpulse.secretName" -}}
-{{- .Values.database.secret.name -}}
+{{- define "eventpulse.databaseUsernameKey" -}}
+{{- default .Values.database.secret.usernameKey .Values.database.usernameKey -}}
+{{- end -}}
+
+{{- define "eventpulse.databasePasswordKey" -}}
+{{- default .Values.database.secret.passwordKey .Values.database.passwordKey -}}
+{{- end -}}
+
+{{- define "eventpulse.configChecksum" -}}
+{{- printf "%s-%s-%s-%s-%s-%s-%v-%s-%s" .Values.config.appName .Values.config.serviceName .Values.config.environment .Values.config.logLevel .Values.database.host .Values.database.name .Values.database.port .Values.database.sslMode (include "eventpulse.secretName" .) | sha256sum -}}
 {{- end -}}
 
 {{- define "eventpulse.postgresName" -}}

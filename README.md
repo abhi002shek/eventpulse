@@ -400,3 +400,30 @@ docs/runbooks/aws-eks-operations.md
 
 Do not run `terraform apply` until the AWS identity, public API CIDR, planned
 resources and EKS cost exposure have been reviewed.
+
+## AWS RDS Data Layer
+
+Milestone 6C adds Terraform packaging for a private Amazon RDS PostgreSQL data
+layer. It plans a Single-AZ dev database in isolated database subnets, encrypted
+`gp3` storage, TLS enforcement, seven-day automated backups, deletion
+protection, final snapshots, Secrets Manager managed credentials and an EKS Pod
+Identity role for the EventPulse service account.
+
+The database is not publicly accessible and does not use public subnets. RDS
+security group ingress is limited to the EKS workload security group required by
+the current VPC CNI setup. Local Kind PostgreSQL remains available for local
+cluster validation; AWS uses managed RDS instead.
+
+The Helm chart is prepared for externally supplied database credentials through
+a synced Kubernetes Secret and optional Secrets Store CSI mount, but the
+EventPulse Helm release is not deployed in this milestone.
+
+Start with the runbook:
+
+```text
+docs/runbooks/aws-rds-operations.md
+```
+
+Do not run `terraform apply` until the AWS identity, subnet placement, planned
+resources, database cost exposure and deletion-protection behavior have been
+reviewed.

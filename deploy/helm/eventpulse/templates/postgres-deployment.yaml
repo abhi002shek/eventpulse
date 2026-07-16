@@ -55,7 +55,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "eventpulse.secretName" . }}
-                  key: {{ .Values.database.secret.passwordKey }}
+                  key: {{ include "eventpulse.databasePasswordKey" . }}
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           readinessProbe:
