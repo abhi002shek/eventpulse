@@ -324,6 +324,24 @@ ops/kind/destroy.sh
 
 The included PostgreSQL deployment is only for local Kind validation. It is not the final production database architecture; AWS RDS is expected in a later AWS milestone. See `docs/runbooks/local-kubernetes-deployment.md` for the full workflow.
 
+## Kyverno Policy Validation
+
+Kyverno policies for local admission-control testing live in `policies/kyverno`.
+
+The local policy set starts standard workload checks in Audit mode so violations appear in PolicyReports before anything is blocked. After review, the validation script switches the well-tested standard policies to Enforce and separately applies signed-image verification for the EventPulse GHCR image.
+
+The signed-image policy trusts only the keyless GitHub Actions identity for `publish-image.yml` on `main` and requires the immutable EventPulse image digest. This complements digest pinning: the digest selects exact image bytes, while the signature proves the trusted workflow signed those bytes.
+
+Kind helpers:
+
+```bash
+ops/kind/install-kyverno.sh
+ops/kind/validate-kyverno.sh
+ops/kind/uninstall-kyverno.sh
+```
+
+See `docs/runbooks/kyverno-policy-validation.md` for PolicyReport inspection, rejection testing, signature-verification notes and webhook recovery.
+
 Equivalent local checks:
 
 ```bash

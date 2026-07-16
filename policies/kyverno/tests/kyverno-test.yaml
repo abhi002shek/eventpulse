@@ -1,0 +1,61 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: eventpulse-policy-tests
+policies:
+  - ../audit/disallow-latest.yaml
+  - ../audit/require-image-digest.yaml
+  - ../audit/require-non-root.yaml
+  - ../audit/require-security-context.yaml
+  - ../audit/require-resources.yaml
+  - ../audit/restrict-registries.yaml
+resources:
+  - resources/valid-eventpulse-deployment.yaml
+  - resources/invalid-latest-image.yaml
+  - resources/invalid-root-container.yaml
+  - resources/invalid-missing-resources.yaml
+  - resources/invalid-missing-security-context.yaml
+  - resources/invalid-unapproved-registry.yaml
+results:
+  - policy: eventpulse-disallow-latest
+    rule: disallow-latest-tag
+    resources:
+      - valid-eventpulse
+    kind: Pod
+    result: pass
+  - policy: eventpulse-disallow-latest
+    rule: disallow-latest-tag
+    resources:
+      - invalid-latest-image
+    kind: Pod
+    result: fail
+  - policy: eventpulse-require-image-digest
+    rule: require-sha256-digest
+    resources:
+      - invalid-latest-image
+    kind: Pod
+    result: fail
+  - policy: eventpulse-require-non-root
+    rule: require-pod-run-as-non-root
+    resources:
+      - invalid-root-container
+    kind: Pod
+    result: fail
+  - policy: eventpulse-require-security-context
+    rule: require-container-hardening
+    resources:
+      - invalid-missing-security-context
+    kind: Pod
+    result: fail
+  - policy: eventpulse-require-resources
+    rule: require-requests-and-limits
+    resources:
+      - invalid-missing-resources
+    kind: Pod
+    result: fail
+  - policy: eventpulse-restrict-registries
+    rule: allow-approved-eventpulse-registry
+    resources:
+      - invalid-unapproved-registry
+    kind: Pod
+    result: fail

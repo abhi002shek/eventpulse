@@ -1,0 +1,44 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: eventpulse-disallow-latest
+  annotations:
+    policies.kyverno.io/title: Disallow Floating Image Tags
+    policies.kyverno.io/category: EventPulse
+    policies.kyverno.io/severity: medium
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: disallow-latest-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - eventpulse
+              selector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - api
+                      - migration
+                      - seed
+                      - test
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+                - kube-public
+                - kube-node-lease
+      validate:
+        failureAction: Audit
+        message: "EventPulse workload images must not use the latest tag."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
