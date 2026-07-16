@@ -14,6 +14,8 @@ locals {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "terraform_data" "node_size_guard" {
   input = {
     min     = var.node_min_size
@@ -53,6 +55,59 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
+data "aws_iam_policy_document" "cluster_secrets_key" {
+  statement {
+    sid = "AllowAccountAdministration"
+
+    actions = [
+      "kms:*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "AllowEksClusterSecretsEncryption"
+
+    actions = [
+      "kms:CreateGrant",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey*",
+      "kms:ReEncrypt*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.cluster.arn]
+    }
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_kms_key" "cluster_secrets" {
+  description             = "Customer managed KMS key for ${var.cluster_name} Kubernetes secret encryption."
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  policy                  = data.aws_iam_policy_document.cluster_secrets_key.json
+
+  tags = merge(var.tags, {
+    Name = "${var.cluster_name}-secrets"
+  })
+}
+
+resource "aws_kms_alias" "cluster_secrets" {
+  name          = "alias/${var.cluster_name}/secrets"
+  target_key_id = aws_kms_key.cluster_secrets.key_id
+}
+
 resource "aws_cloudwatch_log_group" "cluster" {
   name              = "/aws/eks/${var.cluster_name}/cluster"
   retention_in_days = var.cluster_log_retention_days
@@ -74,11 +129,21 @@ resource "aws_eks_cluster" "main" {
     bootstrap_cluster_creator_admin_permissions = false
   }
 
+  encryption_config {
+    provider {
+      key_arn = aws_kms_key.cluster_secrets.arn
+    }
+
+    resources = ["secrets"]
+  }
+
   vpc_config {
     subnet_ids              = var.private_app_subnet_ids
     endpoint_private_access = var.cluster_endpoint_private_access
-    endpoint_public_access  = var.cluster_endpoint_public_access
-    public_access_cidrs     = var.cluster_public_access_cidrs
+    #trivy:ignore:AVD-AWS-0040 Public access is intentionally limited to explicit operator /32 CIDRs during bootstrap.
+    #tfsec:ignore:aws-eks-no-public-cluster-access Public access is intentionally limited to explicit operator /32 CIDRs during bootstrap.
+    endpoint_public_access = var.cluster_endpoint_public_access
+    public_access_cidrs    = var.cluster_public_access_cidrs
   }
 
   tags = merge(var.tags, {
@@ -88,6 +153,7 @@ resource "aws_eks_cluster" "main" {
   depends_on = [
     aws_cloudwatch_log_group.cluster,
     aws_iam_role_policy_attachment.cluster_policy,
+    aws_kms_key.cluster_secrets,
   ]
 }
 

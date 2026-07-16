@@ -93,6 +93,7 @@ Review the plan. It should create EKS platform resources only:
 
 - EKS cluster
 - CloudWatch log group
+- KMS key and alias for Kubernetes secret encryption
 - cluster IAM role and policy attachment
 - node IAM role and policy attachments
 - launch template

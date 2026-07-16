@@ -20,6 +20,8 @@ subnets. The public Kubernetes API endpoint remains enabled during bootstrap,
 but access is restricted to an explicit operator CIDR, preferably the current
 operator public IP as `/32`. The private endpoint is also enabled.
 
+Kubernetes secrets are encrypted with a dedicated customer managed KMS key.
+
 EKS access entries are used instead of manually editing `aws-auth`. The dev
 operator principal receives the AWS-managed `AmazonEKSClusterAdminPolicy`
 through an access policy association. Cluster creator admin permissions are
@@ -60,10 +62,15 @@ The following EKS add-ons are managed with pinned versions:
 The Kubernetes API public endpoint must never allow `0.0.0.0/0`. Terraform
 validates that the configured public CIDRs are narrow. The operator should use
 the current public IP as a `/32` and update it when their network changes.
+Static scanners still flag any public EKS endpoint, so the Terraform includes a
+narrow documented Trivy exception for this bootstrap-only design choice.
 
 Managed nodes run only in private application subnets and the launch template
 does not assign public IPs. There is no SSH key pair or inbound SSH rule. Direct
 node access should use SSM in a later milestone if it becomes necessary.
+
+The EKS cluster encrypts Kubernetes secrets using a customer managed KMS key
+with key rotation enabled.
 
 Node IAM permissions are limited to the AWS-managed policies required for EKS
 worker node operation, ECR image pulls and initial VPC CNI operation. The node
@@ -94,6 +101,7 @@ Expected cost sources include:
 - EKS cluster hourly charge
 - two `t3.medium` EC2 managed nodes by default
 - encrypted `gp3` root volumes
+- KMS key requests for Kubernetes secret encryption
 - existing NAT gateway and its public IPv4 address
 - NAT data processing
 - CloudWatch log ingestion and retention

@@ -387,10 +387,10 @@ group, explicit EKS access entries and pinned AWS-managed add-ons. It does not
 deploy EventPulse, RDS, load balancers, Route 53, ACM, Argo CD or observability.
 
 The node group uses the private application subnets from the existing network
-remote state. Worker nodes do not receive public IP addresses. The Kubernetes
-API has both private and public endpoint access enabled during bootstrap, but
-the public endpoint must be restricted to a narrow operator CIDR such as the
-current public IP as `/32`.
+remote state. Worker nodes do not receive public IP addresses. Kubernetes
+secrets are encrypted with a customer managed KMS key. The Kubernetes API has
+both private and public endpoint access enabled during bootstrap, but the public
+endpoint must be restricted to the current operator public IP as `/32`.
 
 Start with the runbook:
 
