@@ -1,4 +1,11 @@
+data "aws_caller_identity" "current" {}
+
 locals {
+  terraform_state_bucket_name = coalesce(
+    var.terraform_state_bucket_name,
+    lower("${var.project_name}-${var.environment}-terraform-state-${data.aws_caller_identity.current.account_id}-${var.region}"),
+  )
+
   common_tags = {
     Project            = var.project_name
     Environment        = var.environment
@@ -20,7 +27,7 @@ data "terraform_remote_state" "network" {
   backend = "s3"
 
   config = {
-    bucket       = var.terraform_state_bucket_name
+    bucket       = local.terraform_state_bucket_name
     key          = "eventpulse/dev/network/terraform.tfstate"
     region       = var.region
     encrypt      = true
