@@ -34,6 +34,8 @@ capacity while the cluster is being learned and validated.
 
 The managed node launch template requires IMDSv2, disables public IP assignment,
 uses an encrypted `gp3` root volume and does not configure SSH access.
+Managed nodes use the Amazon Linux 2023 EKS node AMI because Amazon Linux 2 node
+AMIs are not supported for Kubernetes 1.33 and newer.
 
 The following EKS add-ons are managed with pinned versions:
 

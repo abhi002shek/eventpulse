@@ -84,10 +84,13 @@ terraform validate
 ```bash
 terraform plan \
   -out=tfplan \
-  -var='terraform_state_bucket_name=eventpulse-dev-terraform-state-ACCOUNT_ID-ap-south-1' \
   -var='cluster_public_access_cidrs=["CURRENT_PUBLIC_IP/32"]' \
   -var='access_entry_principal_arn=OPERATOR_IAM_PRINCIPAL_ARN'
 ```
+
+The EKS stack derives the default Terraform state bucket name from the active
+AWS account and region. Pass `terraform_state_bucket_name` only if the bootstrap
+state bucket uses a non-standard name.
 
 Review the plan. It should create EKS platform resources only:
 
@@ -100,6 +103,10 @@ Review the plan. It should create EKS platform resources only:
 - managed node group
 - EKS add-ons
 - EKS access entry and policy association
+
+The managed node group should use the Amazon Linux 2023 EKS node AMI for
+Kubernetes 1.36. Amazon Linux 2 node AMIs are rejected by EKS for Kubernetes
+1.33 and newer.
 
 Stop if the plan includes VPC replacement, subnet replacement, NAT replacement,
 RDS, load balancers, Route 53, application workloads, SSH key pairs,
@@ -166,7 +173,6 @@ plan/apply:
 ```bash
 terraform plan \
   -out=tfplan \
-  -var='terraform_state_bucket_name=eventpulse-dev-terraform-state-ACCOUNT_ID-ap-south-1' \
   -var='cluster_public_access_cidrs=["NEW_PUBLIC_IP/32"]' \
   -var='access_entry_principal_arn=OPERATOR_IAM_PRINCIPAL_ARN'
 ```
@@ -197,7 +203,6 @@ destroy EKS before deleting the network:
 ```bash
 cd infrastructure/terraform/environments/dev/eks
 terraform plan -destroy -out=tfplan \
-  -var='terraform_state_bucket_name=eventpulse-dev-terraform-state-ACCOUNT_ID-ap-south-1' \
   -var='cluster_public_access_cidrs=["CURRENT_PUBLIC_IP/32"]' \
   -var='access_entry_principal_arn=OPERATOR_IAM_PRINCIPAL_ARN'
 terraform apply tfplan

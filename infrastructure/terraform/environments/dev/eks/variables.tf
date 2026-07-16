@@ -141,7 +141,7 @@ variable "access_entry_principal_arn" {
 }
 
 variable "terraform_state_bucket_name" {
-  description = "Terraform state bucket name created by the bootstrap stack."
+  description = "Optional Terraform state bucket name created by the bootstrap stack. When omitted, the dev naming convention is derived from the current AWS account and region."
   type        = string
   default     = null
 }
