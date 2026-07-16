@@ -301,6 +301,29 @@ After pushing, the workflow records the exact digest, generates an SPDX JSON SBO
 
 Use digest-based references for verification and deployment. See `docs/runbooks/image-verification.md` for pull, SBOM, provenance and Cosign verification commands.
 
+## Local Kubernetes Packaging
+
+The Helm chart for local Kubernetes validation lives in `deploy/helm/eventpulse`.
+
+The default chart values deploy the verified immutable image digest:
+
+```text
+ghcr.io/abhi002shek/eventpulse@sha256:76571b0ad6961c7ea7c72d9c3dc81b6014e22be2ceefb26a7157ea607b80e224
+```
+
+The chart includes non-root API Pods, dropped Linux capabilities, `RuntimeDefault` seccomp, read-only root filesystem, resource requests and limits, startup/readiness/liveness probes, migration and seed Jobs, ConfigMap and Secret separation, HPA, PDB and default-deny NetworkPolicies.
+
+Kind scripts live in `ops/kind`:
+
+```bash
+ops/kind/create-cluster.sh
+ops/kind/deploy.sh
+ops/kind/validate.sh
+ops/kind/destroy.sh
+```
+
+The included PostgreSQL deployment is only for local Kind validation. It is not the final production database architecture; AWS RDS is expected in a later AWS milestone. See `docs/runbooks/local-kubernetes-deployment.md` for the full workflow.
+
 Equivalent local checks:
 
 ```bash

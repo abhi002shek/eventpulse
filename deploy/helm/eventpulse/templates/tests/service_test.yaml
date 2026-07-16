@@ -1,0 +1,35 @@
+{{- if .Values.helmTests.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "eventpulse.fullname" . }}-service-dns-test
+  labels:
+    {{- include "eventpulse.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: service-dns
+      image: {{ include "eventpulse.image" . }}
+      imagePullPolicy: {{ .Values.image.pullPolicy }}
+      command:
+        - python
+        - -c
+        - |
+          import socket
+          socket.gethostbyname("{{ include "eventpulse.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local")
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      resources:
+        {{- toYaml .Values.resources | nindent 8 }}
+{{- end }}
