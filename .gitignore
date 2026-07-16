@@ -19,3 +19,12 @@ coverage.xml
 *.key
 id_rsa
 id_ed25519
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+crash.log
+crash.*.log
+backend.hcl
+*.tfvars
+!*.tfvars.example
