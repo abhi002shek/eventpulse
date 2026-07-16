@@ -342,6 +342,29 @@ ops/kind/uninstall-kyverno.sh
 
 See `docs/runbooks/kyverno-policy-validation.md` for PolicyReport inspection, rejection testing, signature-verification notes and webhook recovery.
 
+## AWS Infrastructure
+
+Terraform for the AWS dev foundation lives in `infrastructure/terraform`.
+
+Milestone 6A creates only the bootstrap state bucket and network foundation for
+`ap-south-1`. It does not create EKS, RDS, load balancers or application
+deployments.
+
+The network design uses a custom `10.30.0.0/16` VPC, two Availability Zones,
+public subnets, private application subnets, isolated private database subnets
+and one cost-conscious dev NAT gateway. The private application subnets include
+future-compatible EKS internal load balancer tags; cluster-specific tags are
+postponed until the EKS milestone.
+
+Start with the runbook:
+
+```text
+docs/runbooks/aws-terraform-bootstrap.md
+```
+
+Do not run `terraform apply` until the AWS account, region, planned resources
+and NAT gateway cost exposure have been reviewed.
+
 Equivalent local checks:
 
 ```bash
