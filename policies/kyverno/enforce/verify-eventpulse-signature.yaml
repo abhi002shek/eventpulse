@@ -1,0 +1,53 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: eventpulse-verify-image-signature
+  annotations:
+    policies.kyverno.io/title: Verify EventPulse Image Signature
+    policies.kyverno.io/category: EventPulse
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  webhookTimeoutSeconds: 30
+  failurePolicy: Fail
+  background: false
+  rules:
+    - name: verify-eventpulse-ghcr-keyless-signature
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - eventpulse
+              selector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - api
+                      - migration
+                      - seed
+                      - test
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+                - kube-public
+                - kube-node-lease
+      verifyImages:
+        - imageReferences:
+            - ghcr.io/abhi002shek/eventpulse*
+          required: true
+          mutateDigest: false
+          verifyDigest: true
+          attestors:
+            - count: 1
+              entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subject: https://github.com/abhi002shek/eventpulse/.github/workflows/publish-image.yml@refs/heads/main
+                    rekor:
+                      url: https://rekor.sigstore.dev

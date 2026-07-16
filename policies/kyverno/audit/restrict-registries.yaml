@@ -1,0 +1,44 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: eventpulse-restrict-registries
+  annotations:
+    policies.kyverno.io/title: Restrict EventPulse Registries
+    policies.kyverno.io/category: EventPulse
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: allow-approved-eventpulse-registry
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - eventpulse
+              selector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - api
+                      - migration
+                      - seed
+                      - test
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kyverno
+                - kube-public
+                - kube-node-lease
+      validate:
+        failureAction: Audit
+        message: "EventPulse application workloads must use the approved GHCR repository."
+        pattern:
+          spec:
+            containers:
+              - image: "ghcr.io/abhi002shek/eventpulse*"
