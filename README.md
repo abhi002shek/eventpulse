@@ -378,3 +378,25 @@ docker image inspect eventpulse-api:ci-test
 ```
 
 The workflows still need to run on GitHub before their remote execution can be considered verified.
+
+## AWS EKS Platform
+
+Milestone 6B adds Terraform packaging for an EKS cluster named
+`eventpulse-dev`. It plans a managed EKS control plane, one private managed node
+group, explicit EKS access entries and pinned AWS-managed add-ons. It does not
+deploy EventPulse, RDS, load balancers, Route 53, ACM, Argo CD or observability.
+
+The node group uses the private application subnets from the existing network
+remote state. Worker nodes do not receive public IP addresses. Kubernetes
+secrets are encrypted with a customer managed KMS key. The Kubernetes API has
+both private and public endpoint access enabled during bootstrap, but the public
+endpoint must be restricted to the current operator public IP as `/32`.
+
+Start with the runbook:
+
+```text
+docs/runbooks/aws-eks-operations.md
+```
+
+Do not run `terraform apply` until the AWS identity, public API CIDR, planned
+resources and EKS cost exposure have been reviewed.
