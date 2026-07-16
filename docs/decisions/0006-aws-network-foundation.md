@@ -11,14 +11,15 @@ first AWS milestone should stay small and understandable.
 Create a Terraform bootstrap stack and a reusable network module for the dev
 environment in `ap-south-1`.
 
-The bootstrap stack creates an S3 bucket for Terraform remote state. It uses S3
-native lock files through Terraform backend setting `use_lockfile = true`.
-DynamoDB locking is not created.
+The bootstrap stack creates an S3 bucket for Terraform remote state and a
+customer managed KMS key for state encryption. It uses S3 native lock files
+through Terraform backend setting `use_lockfile = true`. DynamoDB locking is not
+created.
 
 The dev network creates:
 
 - a custom VPC instead of using the default VPC
-- two public subnets
+- two public subnets that do not automatically assign public IPv4 addresses
 - two private application subnets
 - two isolated private database subnets
 - one Internet Gateway

@@ -25,6 +25,25 @@ resource "aws_s3_bucket" "terraform_state" {
   }
 }
 
+resource "aws_kms_key" "terraform_state" {
+  description             = "Customer managed KMS key for EventPulse Terraform state encryption."
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-terraform-state"
+  })
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "aws_kms_alias" "terraform_state" {
+  name          = "alias/${var.project_name}/${var.environment}/terraform-state"
+  target_key_id = aws_kms_key.terraform_state.key_id
+}
+
 resource "aws_s3_bucket_public_access_block" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
 
@@ -55,8 +74,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" 
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      kms_master_key_id = aws_kms_key.terraform_state.arn
+      sse_algorithm     = "aws:kms"
     }
+
+    bucket_key_enabled = true
   }
 }
 

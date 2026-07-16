@@ -351,10 +351,11 @@ Milestone 6A creates only the bootstrap state bucket and network foundation for
 deployments.
 
 The network design uses a custom `10.30.0.0/16` VPC, two Availability Zones,
-public subnets, private application subnets, isolated private database subnets
-and one cost-conscious dev NAT gateway. The private application subnets include
-future-compatible EKS internal load balancer tags; cluster-specific tags are
-postponed until the EKS milestone.
+public subnets without automatic public IPv4 assignment, private application
+subnets, isolated private database subnets and one cost-conscious dev NAT
+gateway. The Terraform state bucket uses a customer managed KMS key. The private
+application subnets include future-compatible EKS internal load balancer tags;
+cluster-specific tags are postponed until the EKS milestone.
 
 Start with the runbook:
 

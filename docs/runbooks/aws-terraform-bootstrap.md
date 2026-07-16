@@ -8,8 +8,8 @@ for the dev network stack.
 - Terraform `>= 1.10.0`
 - AWS CLI configured through the normal AWS credential chain
 - AWS region `ap-south-1`
-- permission to create S3, VPC, subnet, route table, NAT gateway, Elastic IP
-  and IAM resources when optional VPC Flow Logs are enabled
+- permission to create S3, KMS, VPC, subnet, route table, NAT gateway, Elastic
+  IP and IAM resources when optional VPC Flow Logs are enabled
 
 Do not put AWS credentials in repository files.
 
@@ -30,8 +30,8 @@ terraform init
 terraform plan -out=tfplan
 ```
 
-Review the plan. It should create only the Terraform state S3 bucket and related
-bucket controls.
+Review the plan. It should create only the Terraform state S3 bucket, its
+customer managed KMS key and related bucket controls.
 
 Apply only after explicit approval:
 
@@ -80,7 +80,7 @@ terraform plan -out=tfplan
 Review the plan carefully before applying. Expected network resources include:
 
 - VPC `10.30.0.0/16`
-- two public subnets
+- two public subnets without automatic public IPv4 assignment
 - two private application subnets
 - two isolated private database subnets
 - Internet Gateway
@@ -103,6 +103,7 @@ milestone are:
 - NAT data processing
 - public IPv4 address used by the NAT gateway
 - minimal S3 state storage
+- KMS key requests for Terraform state encryption
 
 `enable_nat_gateway = false` can avoid NAT costs, but private application
 subnets then cannot reach the public Internet for package downloads or image
