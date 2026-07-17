@@ -37,6 +37,60 @@
         }
       }
     },
+    "monitoring": {
+      "type": "object",
+      "required": ["enabled", "prometheusNamespace", "serviceMonitor", "prometheusRule"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "prometheusNamespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "serviceMonitor": {
+          "type": "object",
+          "required": ["enabled", "interval", "scrapeTimeout", "labels"],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "interval": {
+              "type": "string",
+              "minLength": 1
+            },
+            "scrapeTimeout": {
+              "type": "string",
+              "minLength": 1
+            },
+            "labels": {
+              "type": "object"
+            }
+          }
+        },
+        "prometheusRule": {
+          "type": "object",
+          "required": ["enabled", "labels", "latencyThresholdSeconds", "highErrorRatio"],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "labels": {
+              "type": "object"
+            },
+            "latencyThresholdSeconds": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "highErrorRatio": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            }
+          }
+        }
+      }
+    },
     "ingress": {
       "type": "object",
       "required": ["enabled", "className", "path", "pathType", "annotations"],

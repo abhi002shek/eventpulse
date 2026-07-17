@@ -8,6 +8,7 @@ from app.bookings.models import BOOKING_STATUS_CONFIRMED, Booking
 from app.bookings.repository import BookingRepository
 from app.bookings.schemas import BookingCreateRequest
 from app.exceptions import BookingNotFoundError, EventNotFoundError, InsufficientCapacityError
+from app.metrics import record_booking_result
 
 
 @dataclass(frozen=True)
@@ -28,9 +29,11 @@ class BookingService:
         with self._session.begin():
             event = self._repository.get_event_for_booking(request.event_id)
             if event is None:
+                record_booking_result("event_not_found")
                 raise EventNotFoundError
 
             if event.available_capacity < request.quantity:
+                record_booking_result("insufficient_capacity")
                 raise InsufficientCapacityError
 
             booking = Booking(
@@ -43,6 +46,7 @@ class BookingService:
             event.available_capacity -= request.quantity
             self._repository.add_booking(booking)
             self._session.flush()
+            record_booking_result("confirmed")
 
             return BookingResult(
                 public_id=booking.public_id,

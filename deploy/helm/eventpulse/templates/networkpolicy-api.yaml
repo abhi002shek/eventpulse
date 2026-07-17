@@ -18,6 +18,15 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
+    {{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.monitoring.prometheusNamespace | quote }}
+      ports:
+        - protocol: TCP
+          port: 8000
+    {{- end }}
     {{- range .Values.networkPolicy.apiIngressCidrs }}
     - from:
         - ipBlock:

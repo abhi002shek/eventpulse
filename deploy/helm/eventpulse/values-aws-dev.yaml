@@ -15,6 +15,22 @@ service:
   port: 8000
   targetPort: 8000
 
+monitoring:
+  enabled: false
+  prometheusNamespace: monitoring
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+    labels:
+      release: eventpulse-observability
+  prometheusRule:
+    enabled: false
+    labels:
+      release: eventpulse-observability
+    latencyThresholdSeconds: 0.5
+    highErrorRatio: 0.05
+
 ingress:
   enabled: true
   className: alb

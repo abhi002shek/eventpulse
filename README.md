@@ -30,6 +30,36 @@ This milestone includes:
 
 This milestone does not include cancellation, refunds, payments, authentication, user accounts, cloud infrastructure, Kubernetes, Terraform, or frontend code.
 
+## AWS EKS Observability
+
+EventPulse includes an AWS EKS observability package for the dev cluster:
+
+- kube-prometheus-stack chart `87.17.0` for Prometheus, Alertmanager, Grafana, kube-state-metrics and node-exporter
+- AWS for Fluent Bit chart `0.2.0` for forwarding application logs to CloudWatch Logs
+- Prometheus metrics exposed by the API at `/metrics`
+- Helm-rendered `ServiceMonitor` and `PrometheusRule` resources when monitoring is enabled
+- Grafana dashboards in `observability/grafana/`
+- Alert notes in `observability/alerts/`
+- Terraform-managed CloudWatch log group and Fluent Bit Pod Identity role in `infrastructure/terraform/environments/dev/observability/`
+
+Grafana, Prometheus and Alertmanager are ClusterIP-only. Use `kubectl port-forward`; do not expose Grafana publicly in this milestone.
+
+Start with the runbook:
+
+```bash
+docs/runbooks/aws-observability.md
+```
+
+Install and validate:
+
+```bash
+ops/eks/install-observability.sh
+ops/eks/validate-observability.sh
+ops/eks/run-resilience-tests.sh
+```
+
+The alert response guide is in `docs/runbooks/eventpulse-alert-response.md`.
+
 ## Requirements
 
 - Python 3.12

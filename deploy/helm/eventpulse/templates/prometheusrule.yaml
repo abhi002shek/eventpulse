@@ -1,0 +1,69 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "eventpulse.fullname" . }}
+  labels:
+    {{- include "eventpulse.labels" . | nindent 4 }}
+    {{- with .Values.monitoring.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: eventpulse-api.rules
+      rules:
+        - alert: EventPulseDeploymentUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="{{ .Release.Namespace }}", deployment="{{ include "eventpulse.fullname" . }}"} < 1
+          for: 5m
+          labels:
+            severity: critical
+            service: eventpulse-api
+          annotations:
+            summary: EventPulse API has no available replicas
+            description: The EventPulse API Deployment has had zero available replicas for at least five minutes.
+        - alert: EventPulseHigh5xxRate
+          expr: |
+            (
+              sum(rate(eventpulse_http_requests_total{status_code=~"5.."}[5m]))
+              /
+              clamp_min(sum(rate(eventpulse_http_requests_total[5m])), 1)
+            ) > {{ .Values.monitoring.prometheusRule.highErrorRatio }}
+          for: 10m
+          labels:
+            severity: warning
+            service: eventpulse-api
+          annotations:
+            summary: EventPulse API 5xx error ratio is elevated
+            description: More than {{ mulf .Values.monitoring.prometheusRule.highErrorRatio 100 }} percent of recent EventPulse API requests returned 5xx responses.
+        - alert: EventPulseHighLatency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum(rate(eventpulse_http_request_duration_seconds_bucket[5m])) by (le)
+            ) > {{ .Values.monitoring.prometheusRule.latencyThresholdSeconds }}
+          for: 10m
+          labels:
+            severity: warning
+            service: eventpulse-api
+          annotations:
+            summary: EventPulse API p95 latency is elevated
+            description: The EventPulse API p95 latency exceeded {{ .Values.monitoring.prometheusRule.latencyThresholdSeconds }} seconds for at least ten minutes.
+        - alert: EventPulsePodRestarting
+          expr: increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", container="api", pod=~"{{ include "eventpulse.fullname" . }}-.*"}[10m]) > 0
+          for: 0m
+          labels:
+            severity: warning
+            service: eventpulse-api
+          annotations:
+            summary: EventPulse API container restarted
+            description: An EventPulse API container restarted during the last ten minutes.
+        - alert: EventPulseDatabaseReadinessFailure
+          expr: increase(eventpulse_database_failures_total{operation="readiness"}[5m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+            service: eventpulse-api
+          annotations:
+            summary: EventPulse database readiness checks are failing
+            description: EventPulse observed database readiness failures for at least five minutes.
+{{- end }}
