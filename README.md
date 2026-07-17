@@ -464,3 +464,34 @@ docs/runbooks/aws-eventpulse-deployment.md
 The synchronized Kubernetes Secret `eventpulse-database` is created only while a
 Pod mounts the SecretProviderClass volume. Do not print or copy database secret
 values during validation.
+
+## AWS Public ALB Exposure
+
+Milestone 6E adds temporary public HTTP exposure for EventPulse through AWS Load
+Balancer Controller and an internet-facing Application Load Balancer.
+
+The controller uses chart `3.4.2`, app `v3.4.2`, a dedicated IAM role and EKS
+Pod Identity for `kube-system/aws-load-balancer-controller`. EventPulse remains
+deployed by immutable signed image digest, and its Kubernetes Service remains
+`ClusterIP`.
+
+This milestone exposes only HTTP port 80 for portfolio validation. It does not
+add Route 53, ACM, HTTPS, a custom domain, WAF, CloudFront, Argo CD or a
+monitoring stack.
+
+Start with:
+
+```text
+docs/runbooks/aws-public-alb.md
+```
+
+Operational scripts:
+
+```bash
+ops/eks/install-aws-load-balancer-controller.sh
+ops/eks/deploy-public-ingress.sh
+ops/eks/validate-public-ingress.sh
+ops/eks/remove-public-ingress.sh
+```
+
+Remove the Ingress after validation to avoid ongoing ALB hourly and LCU charges.

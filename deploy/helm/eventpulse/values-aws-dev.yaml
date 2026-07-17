@@ -15,6 +15,20 @@ service:
   port: 8000
   targetPort: 8000
 
+ingress:
+  enabled: true
+  className: alb
+  path: /
+  pathType: Prefix
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
+
 config:
   environment: aws-dev
   logLevel: INFO
@@ -65,6 +79,7 @@ pdb:
 
 networkPolicy:
   enabled: true
+  apiIngressCidrs: []
 
 helmTests:
   enabled: true

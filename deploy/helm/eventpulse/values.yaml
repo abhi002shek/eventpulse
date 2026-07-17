@@ -38,6 +38,13 @@ service:
   port: 8000
   targetPort: 8000
 
+ingress:
+  enabled: false
+  className: alb
+  path: /
+  pathType: Prefix
+  annotations: {}
+
 resources:
   requests:
     cpu: 100m
@@ -90,6 +97,7 @@ pdb:
 
 networkPolicy:
   enabled: true
+  apiIngressCidrs: []
 
 config:
   appName: EventPulse API
