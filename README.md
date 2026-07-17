@@ -427,3 +427,40 @@ docs/runbooks/aws-rds-operations.md
 Do not run `terraform apply` until the AWS identity, subnet placement, planned
 resources, database cost exposure and deletion-protection behavior have been
 reviewed.
+
+## AWS Private Workload Deployment
+
+Milestone 6D deploys EventPulse privately to the existing `eventpulse-dev` EKS
+cluster and connects it to the existing private RDS PostgreSQL instance. It uses
+the signed immutable GHCR image digest, Secrets Store CSI Driver, AWS Secrets
+and Configuration Provider, EKS Pod Identity, Kyverno admission policies,
+Alembic migrations and repeatable seed data.
+
+The API remains private as a `ClusterIP` Service. This milestone does not create
+an ALB, Ingress, Route 53 record, ACM certificate, Argo CD or monitoring stack.
+
+AWS-specific Helm values live at:
+
+```text
+deploy/helm/eventpulse/values-aws-dev.yaml
+```
+
+Operational scripts:
+
+```bash
+ops/eks/install-secrets-provider.sh
+ops/eks/install-kyverno.sh
+ops/eks/deploy-eventpulse.sh
+ops/eks/validate-eventpulse.sh
+ops/eks/uninstall-eventpulse.sh
+```
+
+Start with the runbook:
+
+```text
+docs/runbooks/aws-eventpulse-deployment.md
+```
+
+The synchronized Kubernetes Secret `eventpulse-database` is created only while a
+Pod mounts the SecretProviderClass volume. Do not print or copy database secret
+values during validation.
