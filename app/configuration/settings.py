@@ -23,6 +23,7 @@ class Settings(BaseSettings):
         default=SecretStr("eventpulse_dev_password"),
         validation_alias="DATABASE_PASSWORD",
     )
+    database_ssl_mode: str = Field(default="disable", validation_alias="PGSSLMODE")
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -33,7 +34,11 @@ class Settings(BaseSettings):
         host = self.database_host
         port = self.database_port
         name = quote_plus(self.database_name)
-        return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{name}"
+        ssl_query = ""
+        if self.database_ssl_mode != "disable":
+            ssl_query = f"?sslmode={quote_plus(self.database_ssl_mode)}"
+
+        return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{name}{ssl_query}"
 
 
 @lru_cache

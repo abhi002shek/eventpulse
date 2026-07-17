@@ -194,6 +194,16 @@
             "secretProviderClassName": {
               "type": "string"
             },
+            "secretArn": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "usePodIdentity": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
             "mountPath": {
               "type": "string",
               "minLength": 1
