@@ -1,0 +1,79 @@
+flowchart TB
+  subgraph GitHub["GitHub"]
+    Repo["Source repository"]
+    CI["CI: Ruff, Mypy, Pytest"]
+    Sec["Gitleaks and Trivy"]
+    Sonar["Self-hosted SonarQube"]
+    Publish["Secure image publishing"]
+    GHCR["GHCR signed image"]
+    SBOM["SPDX SBOM and provenance"]
+    Repo --> CI
+    Repo --> Sec
+    Repo --> Sonar
+    CI --> Publish
+    Sec --> Publish
+    Publish --> GHCR
+    Publish --> SBOM
+  end
+
+  subgraph PublicAWS["AWS public layer"]
+    Internet["Internet"]
+    ALB["Public ALB, HTTP demo"]
+    PublicSubnets["Public subnets, two AZs"]
+    NAT["NAT Gateway"]
+    Internet --> ALB
+    PublicSubnets --> ALB
+    PublicSubnets --> NAT
+  end
+
+  subgraph PrivateApp["Private application layer"]
+    EKS["EKS private worker nodes"]
+    App["EventPulse Pods"]
+    Kyverno["Kyverno admission"]
+    CSI["Secrets Store CSI"]
+    LBC["AWS Load Balancer Controller"]
+    Prom["Prometheus"]
+    Grafana["Grafana"]
+    Alertmanager["Alertmanager"]
+    FluentBit["Fluent Bit"]
+    EKS --> App
+    EKS --> Kyverno
+    EKS --> CSI
+    EKS --> LBC
+    EKS --> Prom
+    EKS --> Grafana
+    EKS --> Alertmanager
+    EKS --> FluentBit
+  end
+
+  subgraph DataLayer["Isolated data layer"]
+    RDS["Private RDS PostgreSQL"]
+    DBSubnets["Isolated DB subnets"]
+    Secrets["Secrets Manager"]
+    KMS["KMS keys"]
+    DBSubnets --> RDS
+    Secrets --> KMS
+    RDS --> KMS
+  end
+
+  subgraph Observability["Observability and security"]
+    CW["CloudWatch Logs"]
+    Rules["PrometheusRule alerts"]
+    Dashboards["Grafana dashboards"]
+    Terraform["Terraform states"]
+  end
+
+  ALB --> App
+  App -->|"TLS database connection"| RDS
+  App -->|"synced secret"| CSI
+  CSI -->|"Pod Identity"| Secrets
+  FluentBit --> CW
+  Prom -->|"scrape /metrics"| App
+  Prom --> Rules
+  Grafana --> Prom
+  Alertmanager --> Prom
+  GHCR -->|"signed digest"| Kyverno
+  Kyverno --> App
+  Terraform --> PublicAWS
+  Terraform --> PrivateApp
+  Terraform --> DataLayer
