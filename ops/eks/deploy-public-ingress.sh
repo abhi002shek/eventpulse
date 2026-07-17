@@ -67,6 +67,8 @@ for index in "${!public_subnet_cidrs[@]}"; do
   helm_set_args+=(--set-string "networkPolicy.apiIngressCidrs[${index}]=${public_subnet_cidrs[${index}]}")
 done
 
+helm_set_args+=("$@")
+
 helm lint "${CHART_DIR}" --values "${VALUES_FILE}" "${helm_set_args[@]}"
 helm template "${RELEASE_NAME}" "${CHART_DIR}" --namespace "${NAMESPACE}" --values "${VALUES_FILE}" "${helm_set_args[@]}" >/tmp/eventpulse-public-ingress.yaml
 
