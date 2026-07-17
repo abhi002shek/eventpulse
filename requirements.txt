@@ -1,5 +1,5 @@
 fastapi==0.139.0
-alembic==1.14.0
+alembic==1.18.5
 email-validator==2.2.0
 prometheus-client==0.22.1
 psycopg[binary]==3.2.3
