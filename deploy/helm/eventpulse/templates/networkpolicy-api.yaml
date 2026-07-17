@@ -18,6 +18,14 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
+    {{- range .Values.networkPolicy.apiIngressCidrs }}
+    - from:
+        - ipBlock:
+            cidr: {{ . | quote }}
+      ports:
+        - protocol: TCP
+          port: 8000
+    {{- end }}
   egress:
     - to:
         - podSelector:
