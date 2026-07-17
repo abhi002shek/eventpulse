@@ -75,8 +75,9 @@ sleep 5
 curl -fsS "http://127.0.0.1:19090/-/ready" >/dev/null
 curl -fsS --get "http://127.0.0.1:19090/api/v1/query" --data-urlencode 'query=up{namespace="eventpulse"}' >/tmp/eventpulse-prometheus-up.json
 grep -q '"status":"success"' /tmp/eventpulse-prometheus-up.json
-curl -fsS "http://127.0.0.1:19090/api/v1/targets?state=active" >/tmp/eventpulse-prometheus-targets.json
-python3 - <<'PY'
+for _ in {1..20}; do
+  curl -fsS "http://127.0.0.1:19090/api/v1/targets?state=active" >/tmp/eventpulse-prometheus-targets.json
+  if python3 - <<'PY'
 import json
 from pathlib import Path
 
@@ -100,8 +101,46 @@ if down_targets:
         )
     raise SystemExit(1)
 PY
+  then
+    break
+  fi
+  sleep 15
+done
+
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+payload = json.loads(Path("/tmp/eventpulse-prometheus-targets.json").read_text())
+targets = [
+    target
+    for target in payload["data"]["activeTargets"]
+    if target.get("labels", {}).get("namespace") == "eventpulse"
+]
+if not targets:
+    raise SystemExit("No active EventPulse Prometheus targets found after waiting.")
+if any(target.get("health") != "up" for target in targets):
+    raise SystemExit("One or more EventPulse Prometheus targets remained unhealthy.")
+PY
+
 curl -fsS --get "http://127.0.0.1:19090/api/v1/query" --data-urlencode 'query=eventpulse_http_requests_total' >/tmp/eventpulse-prometheus-app-metrics.json
-grep -q '"status":"success"' /tmp/eventpulse-prometheus-app-metrics.json
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+payload = json.loads(Path("/tmp/eventpulse-prometheus-app-metrics.json").read_text())
+if payload.get("status") != "success" or not payload.get("data", {}).get("result"):
+    raise SystemExit("Prometheus request metrics for EventPulse are not present.")
+PY
+curl -fsS --get "http://127.0.0.1:19090/api/v1/query" --data-urlencode 'query=eventpulse_http_request_duration_seconds_bucket' >/tmp/eventpulse-prometheus-latency-metrics.json
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+payload = json.loads(Path("/tmp/eventpulse-prometheus-latency-metrics.json").read_text())
+if payload.get("status") != "success" or not payload.get("data", {}).get("result"):
+    raise SystemExit("Prometheus latency metrics for EventPulse are not present.")
+PY
 curl -fsS --get "http://127.0.0.1:19090/api/v1/rules" --data-urlencode 'type=alert' >/tmp/eventpulse-prometheus-rules.json
 grep -q 'EventPulseDeploymentUnavailable' /tmp/eventpulse-prometheus-rules.json
 
