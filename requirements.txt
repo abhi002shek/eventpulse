@@ -3,6 +3,6 @@ alembic==1.14.0
 email-validator==2.2.0
 prometheus-client==0.22.1
 psycopg[binary]==3.2.3
-pydantic-settings==2.7.1
+pydantic-settings==2.14.2
 SQLAlchemy==2.0.36
 uvicorn==0.34.0
